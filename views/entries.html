@@ -4,6 +4,8 @@
     <tr>
       <th>Date</th>
       <th>{{ template "dropdown" .Applications }}</th>
+      <th>Host</th>
+      <th>Env</th>
       <th>Entry</th>
     </tr>
   </thead>
@@ -12,6 +14,8 @@
     <tr>
       <td>{{ $e.PrettyTimestamp }}</td>
       <td>{{ $e.Application }}</td>
+      <td>{{ $e.Host }}</td>
+      <td>{{ $e.Environment }}</td>
       <td>{{ $e.LogLine }}</td>
     </tr>
     {{ end }}

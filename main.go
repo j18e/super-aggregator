@@ -60,6 +60,7 @@ func createEntries(es models.EntryService) error {
 			LogLine:     "something exciting happened",
 			Application: "app1",
 			Host:        "host1",
+			Environment: "prod",
 		}); err != nil {
 			return err
 		}
@@ -69,6 +70,7 @@ func createEntries(es models.EntryService) error {
 			LogLine:     "something boring happened",
 			Application: "app2",
 			Host:        "host2",
+			Environment: "prod",
 		}); err != nil {
 			return err
 		}
@@ -78,6 +80,7 @@ func createEntries(es models.EntryService) error {
 			LogLine:     "something whatever happened",
 			Application: "app3",
 			Host:        "host1",
+			Environment: "test",
 		}); err != nil {
 			return err
 		}
@@ -87,6 +90,7 @@ func createEntries(es models.EntryService) error {
 			LogLine:     "nothing happened",
 			Application: "app4",
 			Host:        "host2",
+			Environment: "test",
 		}); err != nil {
 			return err
 		}

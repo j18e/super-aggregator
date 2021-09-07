@@ -42,17 +42,19 @@ type entryService struct {
 
 type EntriesQuery struct {
 	Application string
+	Host        string
+	Environment string
 }
 
 func (es *entryService) Entries(q EntriesQuery) ([]Entry, error) {
 	var ex []Entry
 	if q.Application != "" {
-		res := es.db.Where("application = ?", q.Application).Find(&ex)
+		res := es.db.Where("application = ?", q.Application).Order("timestamp").Find(&ex)
 		if err := res.Error; err != nil {
 			return nil, err
 		}
 	} else {
-		if err := es.db.Find(&ex).Error; err != nil {
+		if err := es.db.Find(&ex).Order("timestamp").Error; err != nil {
 			return nil, err
 		}
 	}

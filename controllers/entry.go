@@ -11,9 +11,9 @@ import (
 type Entry struct {
 	Timestamp   string `json:"timestamp"   binding:"required"`
 	LogLine     string `json:"log_line"    binding:"required"`
-	Application string `json:"application" binding:"required"`
-	Host        string `json:"host"        binding:"required"`
-	Environment string `json:"environment" binding:"required"`
+	Application string `json:"application" binding:"required,alphanum"`
+	Host        string `json:"host"        binding:"required,alphanum"`
+	Environment string `json:"environment" binding:"required,alphanum"`
 }
 
 func NewEntryController(es models.EntryService) EntryController {
