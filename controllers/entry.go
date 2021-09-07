@@ -28,6 +28,8 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var qs struct {
 			Application string `form:"application"`
+			Host        string `form:"host"`
+			Environment string `form:"environment"`
 		}
 		if err := c.ShouldBindQuery(&qs); err != nil {
 			c.String(http.StatusBadRequest, "%s", err)
@@ -36,8 +38,14 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 		var data struct {
 			Entries      []models.Entry
 			Applications []string
+			Hosts        []string
+			Environments []string
 		}
-		eq := models.EntriesQuery{Application: qs.Application}
+		eq := models.EntriesQuery{
+			Application: qs.Application,
+			Host:        qs.Host,
+			Environment: qs.Environment,
+		}
 		entries, err := ec.es.Entries(eq)
 		if err != nil {
 			c.String(http.StatusInternalServerError, "something went wrong")
@@ -45,7 +53,11 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 		}
 		data.Entries = entries
 		apps, _ := ec.es.Applications()
+		hosts, _ := ec.es.Hosts()
+		envs, _ := ec.es.Environments()
 		data.Applications = apps
+		data.Hosts = hosts
+		data.Environments = envs
 		c.HTML(http.StatusOK, "entries.html", data)
 	}
 }

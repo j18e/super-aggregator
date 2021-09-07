@@ -3,9 +3,9 @@
   <thead>
     <tr>
       <th>Date</th>
-      <th>{{ template "dropdown" .Applications }}</th>
-      <th>Host</th>
-      <th>Env</th>
+      <th>{{ template "applicationsDropdown" .Applications }}</th>
+      <th>{{ template "hostsDropdown" .Hosts }}</th>
+      <th>{{ template "environmentsDropdown" .Environments }}</th>
       <th>Entry</th>
     </tr>
   </thead>
@@ -23,7 +23,7 @@
 </table>
 {{ template "footer" }}
 
-{{ define "dropdown" }}
+{{ define "applicationsDropdown" }}
 <div class="dropdown">
   <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
     Application
@@ -32,6 +32,34 @@
     <li><a class="dropdown-item" href="/">All</a></li>
     {{ range . }}
     <li><a class="dropdown-item" href="/?application={{ . }}">{{ . }}</a></li>
+    {{ end }}
+  </ul>
+</div>
+{{ end }}
+
+{{ define "hostsDropdown" }}
+<div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+    Host
+  </button>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item" href="/">All</a></li>
+    {{ range . }}
+    <li><a class="dropdown-item" href="/?host={{ . }}">{{ . }}</a></li>
+    {{ end }}
+  </ul>
+</div>
+{{ end }}
+
+{{ define "environmentsDropdown" }}
+<div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+    Env
+  </button>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item" href="/">All</a></li>
+    {{ range . }}
+    <li><a class="dropdown-item" href="/?environment={{ . }}">{{ . }}</a></li>
     {{ end }}
   </ul>
 </div>

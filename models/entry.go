@@ -27,6 +27,8 @@ type EntryService interface {
 	CreateMany([]Entry) error
 	Entries(EntriesQuery) ([]Entry, error)
 	Applications() ([]string, error)
+	Hosts() ([]string, error)
+	Environments() ([]string, error)
 
 	AutoMigrate() error
 	DestructiveReset() error
@@ -48,15 +50,9 @@ type EntriesQuery struct {
 
 func (es *entryService) Entries(q EntriesQuery) ([]Entry, error) {
 	var ex []Entry
-	if q.Application != "" {
-		res := es.db.Where("application = ?", q.Application).Order("timestamp").Find(&ex)
-		if err := res.Error; err != nil {
-			return nil, err
-		}
-	} else {
-		if err := es.db.Find(&ex).Order("timestamp").Error; err != nil {
-			return nil, err
-		}
+	res := es.db.Where(q).Order("timestamp").Find(&ex)
+	if err := res.Error; err != nil {
+		return nil, err
 	}
 	return ex, nil
 }
@@ -70,6 +66,32 @@ func (es *entryService) Applications() ([]string, error) {
 	var res []string
 	for _, e := range ex {
 		res = append(res, e.Application)
+	}
+	return res, nil
+}
+
+func (es *entryService) Hosts() ([]string, error) {
+	var ex []Entry
+	err := es.db.Distinct("host").Order("host").Find(&ex).Error
+	if err != nil {
+		return nil, err
+	}
+	var res []string
+	for _, e := range ex {
+		res = append(res, e.Host)
+	}
+	return res, nil
+}
+
+func (es *entryService) Environments() ([]string, error) {
+	var ex []Entry
+	err := es.db.Distinct("environment").Order("environment").Find(&ex).Error
+	if err != nil {
+		return nil, err
+	}
+	var res []string
+	for _, e := range ex {
+		res = append(res, e.Environment)
 	}
 	return res, nil
 }
