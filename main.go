@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"time"
 
 	"github.com/j18e/super-aggregator/controllers"
@@ -20,16 +21,27 @@ func main() {
 }
 
 func run() error {
+	testData := flag.Bool("test-data", false, "flush the database and generate new test data before starting the web server")
+	flag.Parse()
+
 	db, err := gorm.Open(sqlite.Open("tmp/data.sqlite"), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	if err != nil {
 		return err
 	}
-	db.AutoMigrate(&models.Entry{})
 	es := models.NewEntryService(db)
 
-	// if err := createEntries(es); err != nil {
-	// 	return err
-	// }
+	if *testData {
+		if err := es.DestructiveReset(); err != nil {
+			return err
+		}
+		if err := createEntries(es); err != nil {
+			return err
+		}
+	} else {
+		if err := es.AutoMigrate(); err != nil {
+			return err
+		}
+	}
 
 	ec := controllers.NewEntryController(es)
 

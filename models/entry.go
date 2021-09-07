@@ -26,6 +26,9 @@ type EntryService interface {
 	Create(Entry) error
 	CreateMany([]Entry) error
 	Entries() ([]Entry, error)
+
+	AutoMigrate() error
+	DestructiveReset() error
 }
 
 func NewEntryService(db *gorm.DB) EntryService {
@@ -68,4 +71,15 @@ func validateEntries(ex ...Entry) error {
 		}
 	}
 	return nil
+}
+
+func (es *entryService) AutoMigrate() error {
+	return es.db.AutoMigrate(&Entry{})
+}
+
+func (es *entryService) DestructiveReset() error {
+	if err := es.db.Migrator().DropTable(&Entry{}); err != nil {
+		return err
+	}
+	return es.AutoMigrate()
 }
