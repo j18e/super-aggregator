@@ -41,7 +41,7 @@ func run() error {
 }
 
 func createEntries(es models.EntryService) error {
-	ts := time.Date(1991, 1, 1, 8, 1, 0, 0, time.UTC)
+	ts := time.Now()
 	for i := 0; i < 100; i++ {
 		if err := es.Create(models.Entry{
 			Timestamp:   ts,
@@ -51,14 +51,16 @@ func createEntries(es models.EntryService) error {
 		}); err != nil {
 			return err
 		}
+		ts = ts.Add(time.Hour * -6)
 		if err := es.Create(models.Entry{
 			Timestamp:   ts,
 			LogLine:     "something boring happened",
 			Application: "app2",
-			Host:        "host1",
+			Host:        "host2",
 		}); err != nil {
 			return err
 		}
+		ts = ts.Add(time.Hour * -6)
 		if err := es.Create(models.Entry{
 			Timestamp:   ts,
 			LogLine:     "something whatever happened",
@@ -67,7 +69,16 @@ func createEntries(es models.EntryService) error {
 		}); err != nil {
 			return err
 		}
-		ts = ts.Add(time.Hour * 24)
+		ts = ts.Add(time.Hour * -6)
+		if err := es.Create(models.Entry{
+			Timestamp:   ts,
+			LogLine:     "nothing happened",
+			Application: "app4",
+			Host:        "host2",
+		}); err != nil {
+			return err
+		}
+		ts = ts.Add(time.Hour * -6)
 	}
 	return nil
 }
