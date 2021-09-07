@@ -9,12 +9,11 @@ import (
 )
 
 type Entry struct {
-	Timestamp   string `json:"timestamp"`
-	LogLine     string `json:"log_line"`
-	Application string `json:"application"`
-	Host        string `json:"host"`
-	Environment string `json:"environment"`
-	IP          string `json:"ip_address"`
+	Timestamp   string `json:"timestamp"   binding:"required"`
+	LogLine     string `json:"log_line"    binding:"required"`
+	Application string `json:"application" binding:"required"`
+	Host        string `json:"host"        binding:"required"`
+	Environment string `json:"environment" binding:"required"`
 }
 
 func NewEntryController(es models.EntryService) EntryController {
@@ -48,13 +47,14 @@ func (ec *EntryController) CreateHandler() gin.HandlerFunc {
 			c.String(400, "timestamp field must be formatted according to RFC3339")
 			return
 		}
+		ip, _ := c.RemoteIP()
 		err = ec.es.Create(models.Entry{
 			Timestamp:   ts,
 			LogLine:     e.LogLine,
 			Application: e.Application,
 			Host:        e.Host,
 			Environment: e.Environment,
-			IP:          e.IP,
+			IP:          ip.String(),
 		})
 		if err != nil {
 			c.String(http.StatusInternalServerError, "internal server error")
