@@ -39,7 +39,7 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 func (ec *EntryController) CreateHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var e Entry
-		if err := c.ShouldBindJSON(e); err != nil {
+		if err := c.ShouldBindJSON(&e); err != nil {
 			c.String(400, "%s", err)
 			return
 		}
