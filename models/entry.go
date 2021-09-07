@@ -25,7 +25,8 @@ func (e Entry) PrettyTimestamp() string {
 type EntryService interface {
 	Create(Entry) error
 	CreateMany([]Entry) error
-	Entries() ([]Entry, error)
+	Entries(EntriesQuery) ([]Entry, error)
+	Applications() ([]string, error)
 
 	AutoMigrate() error
 	DestructiveReset() error
@@ -39,12 +40,36 @@ type entryService struct {
 	db *gorm.DB
 }
 
-func (es *entryService) Entries() ([]Entry, error) {
+type EntriesQuery struct {
+	Application string
+}
+
+func (es *entryService) Entries(q EntriesQuery) ([]Entry, error) {
 	var ex []Entry
-	if err := es.db.Find(&ex).Error; err != nil {
-		return nil, err
+	if q.Application != "" {
+		res := es.db.Where("application = ?", q.Application).Find(&ex)
+		if err := res.Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := es.db.Find(&ex).Error; err != nil {
+			return nil, err
+		}
 	}
 	return ex, nil
+}
+
+func (es *entryService) Applications() ([]string, error) {
+	var ex []Entry
+	err := es.db.Distinct("application").Order("application").Find(&ex).Error
+	if err != nil {
+		return nil, err
+	}
+	var res []string
+	for _, e := range ex {
+		res = append(res, e.Application)
+	}
+	return res, nil
 }
 
 func (es *entryService) Create(e Entry) error {

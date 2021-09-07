@@ -26,12 +26,27 @@ type EntryController struct {
 
 func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		entries, err := ec.es.Entries()
+		var qs struct {
+			Application string `form:"application"`
+		}
+		if err := c.ShouldBindQuery(&qs); err != nil {
+			c.String(http.StatusBadRequest, "%s", err)
+			return
+		}
+		var data struct {
+			Entries      []models.Entry
+			Applications []string
+		}
+		eq := models.EntriesQuery{Application: qs.Application}
+		entries, err := ec.es.Entries(eq)
 		if err != nil {
 			c.String(http.StatusInternalServerError, "something went wrong")
 			return
 		}
-		c.HTML(http.StatusOK, "entries.html", entries)
+		data.Entries = entries
+		apps, _ := ec.es.Applications()
+		data.Applications = apps
+		c.HTML(http.StatusOK, "entries.html", data)
 	}
 }
 
