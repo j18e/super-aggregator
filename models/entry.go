@@ -46,6 +46,8 @@ type EntriesQuery struct {
 	Host        string
 	Environment string
 	Page        int
+	FromTime    time.Time
+	ToTime      time.Time
 }
 
 func (es *entryService) Entries(q EntriesQuery) ([]Entry, error) {
@@ -55,6 +57,9 @@ func (es *entryService) Entries(q EntriesQuery) ([]Entry, error) {
 		q.Page = 1
 	}
 	db := es.db.Offset((q.Page - 1) * pageSize).Limit(pageSize)
+	if !q.FromTime.IsZero() || !q.ToTime.IsZero() {
+		db = db.Where("timestamp BETWEEN ? AND ?", q.FromTime, q.ToTime)
+	}
 	where := Entry{
 		Application: q.Application,
 		Host:        q.Host,

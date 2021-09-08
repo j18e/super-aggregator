@@ -34,46 +34,12 @@ type EntryController struct {
 }
 
 type queryParams struct {
-	Application string `form:"application"`
-	Host        string `form:"host"`
-	Environment string `form:"environment"`
-	Page        int    `form:"page"`
-}
-
-// EntriesTimePickerHandler handles uses of the entries page's time picker,
-// redirecting users with a request string that selects the time they've
-// chosen.
-func (ec *EntryController) EntriesTimePickerHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var form struct {
-			FromCount int    `form:"fromCount"`
-			FromUnit  string `form:"fromUnit"`
-			ToCount   int    `form:"toCount"`
-			ToUnit    string `form:"toUnit"`
-			ToNow     bool   `form:"toNow"`
-		}
-		if err := c.MustBindWith(&form, binding.Form); err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-		fromTime, err := time.ParseDuration(fmt.Sprintf("%d%s", form.FromCount, form.FromUnit))
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-		}
-		toTime, err := time.ParseDuration(fmt.Sprintf("%d%s", form.FromCount, form.FromUnit))
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-		}
-		if form.ToNow {
-			toTime = 0
-		}
-		vals := c.Request.URL.Query()
-		vals.Set("page", "1")
-		vals.Set("fromTime", fromTime.String())
-		vals.Set("toTime", toTime.String())
-		path := c.Request.URL.Path
-		c.Redirect(http.StatusFound, fmt.Sprintf("%s?%s", path, vals.Encode()))
-	}
+	Application string        `form:"application"`
+	Host        string        `form:"host"`
+	Environment string        `form:"environment"`
+	Page        int           `form:"page"`
+	FromTime    time.Duration `form:"fromTime"`
+	ToTime      time.Duration `form:"toTime"`
 }
 
 // EntriesHandler returns a web page containing log entries stored in the
@@ -102,12 +68,24 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 			Environment: params.Environment,
 			Page:        params.Page,
 		}
+
+		if params.FromTime != 0 || params.ToTime != 0 {
+			if params.FromTime < params.ToTime {
+				c.String(http.StatusBadRequest, "fromTime must be greater than toTime")
+				return
+			}
+			now := time.Now()
+			eq.FromTime = now.Add(params.FromTime * -1)
+			eq.ToTime = now.Add(params.ToTime * -1)
+		}
+
 		entries, err := ec.es.Entries(eq)
 		if err != nil {
 			c.String(http.StatusInternalServerError, "something went wrong")
 			return
 		}
 
+		// prepare results for presenting
 		if params.Application == "" {
 			params.Application = "All"
 		}
@@ -141,6 +119,57 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 
 		c.HTML(http.StatusOK, "entries.html", data)
 	}
+}
+
+// EntriesTimePickerHandler handles uses of the entries page's time picker,
+// redirecting users with a request string that selects the time they've
+// chosen.
+func (ec *EntryController) EntriesTimePickerHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var form struct {
+			FromCount int    `form:"fromCount"`
+			FromUnit  string `form:"fromUnit"`
+			ToCount   int    `form:"toCount"`
+			ToUnit    string `form:"toUnit"`
+			ToNow     bool   `form:"toNow"`
+		}
+		if err := c.MustBindWith(&form, binding.Form); err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		fromTime, err := parseDuration(form.FromCount, form.FromUnit)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+		}
+		toTime, err := parseDuration(form.ToCount, form.ToUnit)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+		}
+		if form.ToNow {
+			toTime = 0
+		}
+		vals := c.Request.URL.Query()
+		vals.Set("page", "1")
+		vals.Set("fromTime", fromTime.String())
+		vals.Set("toTime", toTime.String())
+		path := c.Request.URL.Path
+		c.Redirect(http.StatusFound, fmt.Sprintf("%s?%s", path, vals.Encode()))
+	}
+}
+
+func parseDuration(cnt int, unit string) (time.Duration, error) {
+	switch unit {
+	case "m", "h":
+	case "d":
+		unit = "h"
+		cnt *= 24
+	case "w":
+		unit = "h"
+		cnt = cnt * 24 * 7
+	default:
+		return 0, fmt.Errorf("unknown time unit %s", unit)
+	}
+	return time.ParseDuration(fmt.Sprintf("%d%s", cnt, unit))
 }
 
 type namePath struct {
