@@ -177,7 +177,9 @@ type namePath struct {
 }
 
 func assembleDropdownData(form url.Values, data []string, field, path string) []namePath {
-	form.Set("page", "1")
+	if form.Get("page") != "" {
+		form.Set("page", "1")
+	}
 	form.Del(field)
 	u := &url.URL{
 		Path:     path,

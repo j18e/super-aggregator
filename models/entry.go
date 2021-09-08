@@ -3,10 +3,13 @@ package models
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"gorm.io/gorm"
 )
+
+var reAlphanum = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]{1,18}[a-zA-Z0-9]$`)
 
 // Entry represents a log line in the database.
 type Entry struct {
@@ -143,6 +146,11 @@ func validateEntries(ex ...Entry) error {
 		}
 		if e.Timestamp.IsZero() {
 			return errors.New("field Timestamp must not be empty")
+		}
+		if !reAlphanum.MatchString(e.Application) ||
+			!reAlphanum.MatchString(e.Environment) ||
+			!reAlphanum.MatchString(e.Host) {
+			return fmt.Errorf("application, host and environment must match %s", reAlphanum)
 		}
 	}
 	return nil
