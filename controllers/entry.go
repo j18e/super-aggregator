@@ -25,13 +25,15 @@ type EntryController struct {
 	es models.EntryService
 }
 
+type queryParams struct {
+	Application string `form:"application"`
+	Host        string `form:"host"`
+	Environment string `form:"environment"`
+}
+
 func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var params struct {
-			Application string `form:"application"`
-			Host        string `form:"host"`
-			Environment string `form:"environment"`
-		}
+		var params queryParams
 
 		if err := c.ShouldBindQuery(&params); err != nil {
 			c.String(http.StatusBadRequest, "%s", err)
@@ -42,6 +44,7 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 			Applications []namePath
 			Hosts        []namePath
 			Environments []namePath
+			Current      queryParams
 		}
 		eq := models.EntriesQuery{
 			Application: params.Application,
@@ -55,6 +58,16 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 		}
 
 		data.Entries = entries
+		if params.Application == "" {
+			params.Application = "All"
+		}
+		if params.Host == "" {
+			params.Host = "All"
+		}
+		if params.Environment == "" {
+			params.Environment = "All"
+		}
+		data.Current = params
 
 		reqPath := c.Request.URL.Path
 		apps, _ := ec.es.Applications()

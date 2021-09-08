@@ -3,31 +3,40 @@
   <thead>
     <tr>
       <th>Date</th>
-      <th>{{ template "dropdown" .Applications }}</th>
-      <th>{{ template "dropdown" .Hosts }}</th>
-      <th>{{ template "dropdown" .Environments }}</th>
+      <th>{{ template "dropdownButton" "Application" }}{{ template "dropdownItems" .Applications }}</th>
+      <th>{{ template "dropdownButton" "Host" }}{{ template "dropdownItems" .Hosts }}</th>
+      <th>{{ template "dropdownButton" "Environment" }}{{ template "dropdownItems" .Environments }}</th>
       <th>Entry</th>
     </tr>
   </thead>
   <tbody>
-    {{ range $i, $e := .Entries }}
     <tr>
-      <td>{{ $e.PrettyTimestamp }}</td>
-      <td>{{ $e.Application }}</td>
-      <td>{{ $e.Host }}</td>
-      <td>{{ $e.Environment }}</td>
-      <td>{{ $e.LogLine }}</td>
+      <td></td>
+      <td><strong>{{ .Current.Application }}</strong></td>
+      <td><strong>{{ .Current.Host }}</strong></td>
+      <td><strong>{{ .Current.Environment }}</strong></td>
+      <td></td>
+    </tr>
+    {{ range .Entries }}
+    <tr>
+      <td>{{ .PrettyTimestamp }}</td>
+      <td>{{ .Application }}</td>
+      <td>{{ .Host }}</td>
+      <td>{{ .Environment }}</td>
+      <td>{{ .LogLine }}</td>
     </tr>
     {{ end }}
   </tbody>
 </table>
 {{ template "footer" }}
 
-{{ define "dropdown" }}
+{{ define "dropdownButton" }}
 <div class="dropdown">
   <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-    Env
+    {{ . }}
   </button>
+{{ end }}
+{{ define "dropdownItems" }}
   <ul class="dropdown-menu">
     {{ range . }}
     <li><a class="dropdown-item" href="{{ .Path }}">{{ .Name }}</a></li>
