@@ -48,6 +48,7 @@ func run() error {
 	r := gin.Default()
 	r.LoadHTMLGlob("./views/*.html")
 	r.GET("/", ec.EntriesHandler())
+	r.POST("/", ec.EntriesTimePickerHandler())
 	r.POST("/api/entry", ec.CreateHandler())
 	return r.Run(":9000")
 }

@@ -1,11 +1,61 @@
 {{ template "header" }}
+<h1>Super Aggregator</h1>
+<form method="POST">
+  <div class="row">
+    <div class="col-1">
+      <h3>From</h3>
+    </div>
+    <div class="col-1">
+      <input type="number" class="form-control" name="fromCount" placeholder="inf">
+    </div>
+    <div class="col-2">
+      <select class="form-select" name="fromUnit">
+        <option value="m">Minutes</option>
+        <option value="h">Hours</option>
+        <option value="d">Days</option>
+        <option value="w">Weeks</option>
+      </select>
+    </div>
+    <div class="col-2">
+      <h3>ago</h3>
+    </div>
+    <div class="col">
+      <h3>To</h3>
+    </div>
+    <div class="col">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="" id="toNow" name="toNow">
+        <label class="form-check-label" for="toNow">Now</label>
+      </div>
+    </div>
+    <div class="col-1">
+      <input type="number" class="form-control" name="toCount" placeholder="inf">
+    </div>
+    <div class="col-2">
+      <select class="form-select" name="toUnit">
+        <option value="m">Minutes</option>
+        <option value="h">Hours</option>
+        <option value="d">Days</option>
+        <option value="w">Weeks</option>
+      </select>
+    </div>
+    <div class="col-1">
+      <h3>ago</h3>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-2">
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+  </div>
+</form>
 <table class="table table-hover">
   <thead>
     <tr>
-      <th>Date</th>
-      <th>{{ template "dropdownButton" "Application" }}{{ template "dropdownItems" .Applications }}</th>
+      <th>Time</th>
+      <th>{{ template "dropdownButton" "App" }}{{ template "dropdownItems" .Applications }}</th>
       <th>{{ template "dropdownButton" "Host" }}{{ template "dropdownItems" .Hosts }}</th>
-      <th>{{ template "dropdownButton" "Environment" }}{{ template "dropdownItems" .Environments }}</th>
+      <th>{{ template "dropdownButton" "Env" }}{{ template "dropdownItems" .Environments }}</th>
       <th>Entry</th>
     </tr>
     <tr>

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/j18e/super-aggregator/models"
 )
 
@@ -31,6 +32,32 @@ type queryParams struct {
 	Host        string `form:"host"`
 	Environment string `form:"environment"`
 	Page        int    `form:"page"`
+}
+
+func (ec *EntryController) EntriesTimePickerHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var form struct {
+			FromCount int    `form:"fromCount"`
+			FromUnit  string `form:"fromUnit"`
+			ToCount   int    `form:"toCount"`
+			ToUnit    string `form:"toUnit"`
+			ToNow     bool   `form:"toNow"`
+		}
+		if err := c.MustBindWith(&form, binding.Form); err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		if form.Count <= 0 {
+			c.Redirect(http.StatusFound, "/")
+		}
+		switch form.Unit {
+		case "m", "h", "d", "w":
+		default:
+			c.String(http.StatusBadRequest, "invalid unit specified")
+			return
+		}
+		c.String(200, "from %d %s ago", form.Count, form.Unit)
+	}
 }
 
 func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
