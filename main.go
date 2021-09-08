@@ -54,47 +54,43 @@ func run() error {
 
 func createEntries(es models.EntryService) error {
 	ts := time.Now()
+	var create []models.Entry
 	for i := 0; i < 100; i++ {
-		if err := es.Create(models.Entry{
+		create = append(create, models.Entry{
 			Timestamp:   ts,
 			LogLine:     "something exciting happened",
 			Application: "app1",
 			Host:        "host1",
 			Environment: "prod",
-		}); err != nil {
-			return err
-		}
+		})
 		ts = ts.Add(time.Hour * -6)
-		if err := es.Create(models.Entry{
+		create = append(create, models.Entry{
 			Timestamp:   ts,
 			LogLine:     "something boring happened",
 			Application: "app2",
 			Host:        "host2",
 			Environment: "prod",
-		}); err != nil {
-			return err
-		}
+		})
 		ts = ts.Add(time.Hour * -6)
-		if err := es.Create(models.Entry{
+		create = append(create, models.Entry{
 			Timestamp:   ts,
 			LogLine:     "something whatever happened",
 			Application: "app3",
 			Host:        "host1",
 			Environment: "test",
-		}); err != nil {
-			return err
-		}
+		})
 		ts = ts.Add(time.Hour * -6)
-		if err := es.Create(models.Entry{
+		create = append(create, models.Entry{
 			Timestamp:   ts,
 			LogLine:     "nothing happened",
 			Application: "app4",
 			Host:        "host2",
 			Environment: "test",
-		}); err != nil {
-			return err
-		}
+		})
 		ts = ts.Add(time.Hour * -6)
+	}
+	if err := es.Create(create); err != nil {
+		return err
 	}
 	return nil
 }

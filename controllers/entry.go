@@ -95,26 +95,29 @@ func assembleDropdownData(form url.Values, data []string, field, path string) []
 
 func (ec *EntryController) CreateHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var e Entry
-		if err := c.ShouldBindJSON(&e); err != nil {
+		var ex []Entry
+		if err := c.ShouldBindJSON(&ex); err != nil {
 			c.String(400, "%s", err)
 			return
 		}
-		ts, err := time.Parse(time.RFC3339, e.Timestamp)
-		if err != nil {
-			c.String(400, "timestamp field must be formatted according to RFC3339")
-			return
+		var create []models.Entry
+		for _, e := range ex {
+			ts, err := time.Parse(time.RFC3339, e.Timestamp)
+			if err != nil {
+				c.String(400, "timestamp field must be formatted according to RFC3339")
+				return
+			}
+			ip, _ := c.RemoteIP()
+			create = append(create, models.Entry{
+				Timestamp:   ts,
+				LogLine:     e.LogLine,
+				Application: e.Application,
+				Host:        e.Host,
+				Environment: e.Environment,
+				IP:          ip.String(),
+			})
 		}
-		ip, _ := c.RemoteIP()
-		err = ec.es.Create(models.Entry{
-			Timestamp:   ts,
-			LogLine:     e.LogLine,
-			Application: e.Application,
-			Host:        e.Host,
-			Environment: e.Environment,
-			IP:          ip.String(),
-		})
-		if err != nil {
+		if err := ec.es.Create(create); err != nil {
 			c.String(http.StatusInternalServerError, "internal server error")
 			return
 		}

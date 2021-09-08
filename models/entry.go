@@ -23,8 +23,7 @@ func (e Entry) PrettyTimestamp() string {
 }
 
 type EntryService interface {
-	Create(Entry) error
-	CreateMany([]Entry) error
+	Create([]Entry) error
 	Entries(EntriesQuery) ([]Entry, error)
 	Applications() ([]string, error)
 	Hosts() ([]string, error)
@@ -96,14 +95,7 @@ func (es *entryService) Environments() ([]string, error) {
 	return res, nil
 }
 
-func (es *entryService) Create(e Entry) error {
-	if err := validateEntries(e); err != nil {
-		return fmt.Errorf("validating entry: %w", err)
-	}
-	return es.db.Create(&e).Error
-}
-
-func (es *entryService) CreateMany(ex []Entry) error {
+func (es *entryService) Create(ex []Entry) error {
 	if err := validateEntries(ex...); err != nil {
 		return fmt.Errorf("validating entries: %w", err)
 	}
