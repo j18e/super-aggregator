@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Entry represents a log line in the database.
 type Entry struct {
 	gorm.Model
 	Timestamp   time.Time
@@ -18,21 +19,36 @@ type Entry struct {
 	IP          string
 }
 
+// PrettyTimestamp prints entry timestamps in an easily readable format for the
+// web GUI.
 func (e Entry) PrettyTimestamp() string {
 	return e.Timestamp.Format("2006-01-02T15:04:05Z07")
 }
 
+// EntryService defines what this package can provide to the user, namely
+// interacting with Entries in the database.
 type EntryService interface {
+	// Create creates one or more entries in the database.
 	Create([]Entry) error
+
+	// Entries queries the database for entries given an EntriesQuery object,
+	// which can help narrow down the search to certain parameters.
 	Entries(EntriesQuery) ([]Entry, error)
+
+	// Applications, Hosts and Environments fetches every unique application,
+	// host and environment name from the entries table.
 	Applications() ([]string, error)
 	Hosts() ([]string, error)
 	Environments() ([]string, error)
 
+	// AutoMigrate prepares the database for storing Entries.
 	AutoMigrate() error
+	// DestructiveReset destroys all entry data in the database and
+	// subsequently performs an AutoMigrate.
 	DestructiveReset() error
 }
 
+// NewEntryService creates an EntryService given a database connection.
 func NewEntryService(db *gorm.DB) EntryService {
 	return &entryService{db}
 }
@@ -41,6 +57,8 @@ type entryService struct {
 	db *gorm.DB
 }
 
+// EntriesQuery has all the fields available for querying the database for
+// specific categories of entries.
 type EntriesQuery struct {
 	Application string
 	Host        string
