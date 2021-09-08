@@ -45,11 +45,22 @@ type EntriesQuery struct {
 	Application string
 	Host        string
 	Environment string
+	Page        int
 }
 
 func (es *entryService) Entries(q EntriesQuery) ([]Entry, error) {
+	const pageSize = 100
 	var ex []Entry
-	res := es.db.Where(q).Order("timestamp").Find(&ex)
+	if q.Page == 0 {
+		q.Page = 1
+	}
+	db := es.db.Offset((q.Page - 1) * pageSize).Limit(pageSize)
+	where := Entry{
+		Application: q.Application,
+		Host:        q.Host,
+		Environment: q.Environment,
+	}
+	res := db.Where(where).Order("timestamp").Find(&ex)
 	if err := res.Error; err != nil {
 		return nil, err
 	}

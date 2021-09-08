@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,7 @@ type queryParams struct {
 	Application string `form:"application"`
 	Host        string `form:"host"`
 	Environment string `form:"environment"`
+	Page        int    `form:"page"`
 }
 
 func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
@@ -45,11 +47,15 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 			Hosts        []namePath
 			Environments []namePath
 			Current      queryParams
+			Page         int    // current page number
+			PrevPage     string // path + query string with page number decremented
+			NextPage     string // path + query string with page number incremented
 		}
 		eq := models.EntriesQuery{
 			Application: params.Application,
 			Host:        params.Host,
 			Environment: params.Environment,
+			Page:        params.Page,
 		}
 		entries, err := ec.es.Entries(eq)
 		if err != nil {
@@ -57,7 +63,6 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 			return
 		}
 
-		data.Entries = entries
 		if params.Application == "" {
 			params.Application = "All"
 		}
@@ -67,9 +72,21 @@ func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 		if params.Environment == "" {
 			params.Environment = "All"
 		}
-		data.Current = params
+		if params.Page == 0 {
+			params.Page = 1
+		}
+		data.Entries = entries
+		data.Page = params.Page
 
 		reqPath := c.Request.URL.Path
+
+		form := c.Request.URL.Query()
+		form.Set("page", strconv.Itoa(params.Page+1))
+		data.NextPage = (&url.URL{Path: reqPath, RawQuery: form.Encode()}).String()
+		form.Set("page", strconv.Itoa(params.Page-1))
+		data.PrevPage = (&url.URL{Path: reqPath, RawQuery: form.Encode()}).String()
+		data.Current = params
+
 		apps, _ := ec.es.Applications()
 		data.Applications = assembleDropdownData(c.Request.URL.Query(), apps, "application", reqPath)
 		hosts, _ := ec.es.Hosts()
@@ -86,6 +103,7 @@ type namePath struct {
 }
 
 func assembleDropdownData(form url.Values, data []string, field, path string) []namePath {
+	form.Set("page", "1")
 	form.Del(field)
 	u := &url.URL{
 		Path:     path,

@@ -8,8 +8,6 @@
       <th>{{ template "dropdownButton" "Environment" }}{{ template "dropdownItems" .Environments }}</th>
       <th>Entry</th>
     </tr>
-  </thead>
-  <tbody>
     <tr>
       <td></td>
       <td><strong>{{ .Current.Application }}</strong></td>
@@ -17,6 +15,9 @@
       <td><strong>{{ .Current.Environment }}</strong></td>
       <td></td>
     </tr>
+  </thead>
+  <tbody>
+  {{ if .Entries }}
     {{ range .Entries }}
     <tr>
       <td>{{ .PrettyTimestamp }}</td>
@@ -26,8 +27,23 @@
       <td>{{ .LogLine }}</td>
     </tr>
     {{ end }}
+  {{ else }}
+    <tr>
+      <td>No log entries found</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  {{ end }}
   </tbody>
 </table>
+<nav>
+  <ul class="pagination">
+    <li class="page-item{{ if eq .Page 1 }} disabled{{ end }}"><a class="page-link" href="{{ .PrevPage }}">Previous</a></li>
+    <li class="page-item{{ if not .Entries }} disabled{{ end }}"><a class="page-link" href="{{ .NextPage }}">Next</a></li>
+  </ul>
+</nav>
 {{ template "footer" }}
 
 {{ define "dropdownButton" }}
