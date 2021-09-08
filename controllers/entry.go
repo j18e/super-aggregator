@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -11,6 +12,8 @@ import (
 	"github.com/j18e/super-aggregator/models"
 )
 
+// Entry contains all relevant info of a single log line which has been
+// ingested by the aggregator.
 type Entry struct {
 	Timestamp   string `json:"timestamp"   binding:"required"`
 	LogLine     string `json:"log_line"    binding:"required"`
@@ -19,10 +22,13 @@ type Entry struct {
 	Environment string `json:"environment" binding:"required,alphanum"`
 }
 
+// NewEntryController creates a new EntryController.
 func NewEntryController(es models.EntryService) EntryController {
 	return EntryController{es}
 }
 
+// EntryController contains the Entry related connections between HTTP request handlers
+// and interaction with EntriesService.
 type EntryController struct {
 	es models.EntryService
 }
@@ -34,6 +40,9 @@ type queryParams struct {
 	Page        int    `form:"page"`
 }
 
+// EntriesTimePickerHandler handles uses of the entries page's time picker,
+// redirecting users with a request string that selects the time they've
+// chosen.
 func (ec *EntryController) EntriesTimePickerHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var form struct {
@@ -47,19 +56,28 @@ func (ec *EntryController) EntriesTimePickerHandler() gin.HandlerFunc {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
-		if form.Count <= 0 {
-			c.Redirect(http.StatusFound, "/")
+		fromTime, err := time.ParseDuration(fmt.Sprintf("%d%s", form.FromCount, form.FromUnit))
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
 		}
-		switch form.Unit {
-		case "m", "h", "d", "w":
-		default:
-			c.String(http.StatusBadRequest, "invalid unit specified")
-			return
+		toTime, err := time.ParseDuration(fmt.Sprintf("%d%s", form.FromCount, form.FromUnit))
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
 		}
-		c.String(200, "from %d %s ago", form.Count, form.Unit)
+		if form.ToNow {
+			toTime = 0
+		}
+		vals := c.Request.URL.Query()
+		vals.Set("page", "1")
+		vals.Set("fromTime", fromTime.String())
+		vals.Set("toTime", toTime.String())
+		path := c.Request.URL.Path
+		c.Redirect(http.StatusFound, fmt.Sprintf("%s?%s", path, vals.Encode()))
 	}
 }
 
+// EntriesHandler returns a web page containing log entries stored in the
+// database.
 func (ec *EntryController) EntriesHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var params queryParams
@@ -151,6 +169,8 @@ func assembleDropdownData(form url.Values, data []string, field, path string) []
 	return res
 }
 
+// CreateHandler is a REST API endpoint through which the aggregator ingests
+// log entries.
 func (ec *EntryController) CreateHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ex []Entry
