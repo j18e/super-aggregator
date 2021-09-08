@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"flag"
+	"fmt"
 	"time"
 
 	"github.com/j18e/super-aggregator/controllers"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -22,13 +25,38 @@ func main() {
 
 func run() error {
 	testData := flag.Bool("test-data", false, "flush the database and generate new test data before starting the web server")
+	dbType := flag.String("db.driver", "sqlite", "db driver to use (sqlite or postgres)")
+	dbDebug := flag.Bool("db.debug", false, "whether to log all database queries")
+	sqliteFile := flag.String("sqlite.file", "tmp/data.sqlite", "path to sqlite file to be used")
+	pgHost := flag.String("pg.host", "localhost", "host running the postgres server")
+	pgUser := flag.String("pg.user", "super-aggregator", "name of the user and database to connect to")
+	pgPass := flag.String("pg.password", "", "password to authenticate to postgres with")
+	pgPort := flag.Int("pg.port", 5432, "port number on which postgres is running")
 	flag.Parse()
 
-	db, err := gorm.Open(sqlite.Open("tmp/data.sqlite"), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	gormCfg := &gorm.Config{}
+	if *dbDebug {
+		gormCfg.Logger = logger.Default.LogMode(logger.Info)
+	}
+
+	var db gorm.Dialector
+	var err error
+	switch *dbType {
+	case "sqlite":
+		db = sqlite.Open(*sqliteFile)
+	case "postgres":
+		if *pgPass == "" {
+			return errors.New("flag -pg.password required when using postgres driver")
+		}
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
+			*pgHost, *pgUser, *pgPass, *pgUser, *pgPort)
+		db = postgres.Open(dsn)
+	}
+	gdb, err := gorm.Open(db, gormCfg)
 	if err != nil {
 		return err
 	}
-	es := models.NewEntryService(db)
+	es := models.NewEntryService(gdb)
 
 	if *testData {
 		if err := es.DestructiveReset(); err != nil {
