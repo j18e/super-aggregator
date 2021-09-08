@@ -32,7 +32,7 @@ func (e Entry) PrettyTimestamp() string {
 // interacting with Entries in the database.
 type EntryService interface {
 	// Create creates one or more entries in the database.
-	Create([]Entry) error
+	Create(...Entry) error
 
 	// Entries queries the database for entries given an EntriesQuery object,
 	// which can help narrow down the search to certain parameters.
@@ -132,7 +132,7 @@ func (es *entryService) Environments() ([]string, error) {
 	return res, nil
 }
 
-func (es *entryService) Create(ex []Entry) error {
+func (es *entryService) Create(ex ...Entry) error {
 	if err := validateEntries(ex...); err != nil {
 		return fmt.Errorf("validating entries: %w", err)
 	}

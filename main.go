@@ -90,7 +90,7 @@ func createEntries(es models.EntryService) error {
 		})
 		ts = ts.Add(time.Hour * -6)
 	}
-	if err := es.Create(create); err != nil {
+	if err := es.Create(create...); err != nil {
 		return err
 	}
 	return nil

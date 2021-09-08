@@ -226,7 +226,7 @@ func (ec *EntryController) CreateHandler() gin.HandlerFunc {
 				IP:          ip.String(),
 			})
 		}
-		if err := ec.es.Create(create); err != nil {
+		if err := ec.es.Create(create...); err != nil {
 			c.String(http.StatusInternalServerError, "internal server error")
 			return
 		}
