@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,9 +18,9 @@ import (
 type Entry struct {
 	Timestamp   string `json:"timestamp"   binding:"required"`
 	LogLine     string `json:"log_line"    binding:"required"`
-	Application string `json:"application" binding:"required,alphanum"`
-	Host        string `json:"host"        binding:"required,alphanum"`
-	Environment string `json:"environment" binding:"required,alphanum"`
+	Application string `json:"application" binding:"required"`
+	Host        string `json:"host"        binding:"required"`
+	Environment string `json:"environment" binding:"required"`
 }
 
 // NewEntryController creates a new EntryController.
@@ -227,6 +228,10 @@ func (ec *EntryController) CreateHandler() gin.HandlerFunc {
 			})
 		}
 		if err := ec.es.Create(create...); err != nil {
+			if errors.Is(err, models.ErrInvalidEntries) {
+				c.String(http.StatusBadRequest, "%s", err)
+				return
+			}
 			c.String(http.StatusInternalServerError, "internal server error")
 			return
 		}

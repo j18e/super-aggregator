@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var ErrInvalidEntries = errors.New("one or more entries are invalidly formatted")
+
 var reAlphanum = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]{1,18}[a-zA-Z0-9]$`)
 
 // Entry represents a log line in the database.
@@ -134,7 +136,7 @@ func (es *entryService) Environments() ([]string, error) {
 
 func (es *entryService) Create(ex ...Entry) error {
 	if err := validateEntries(ex...); err != nil {
-		return fmt.Errorf("validating entries: %w", err)
+		return ErrInvalidEntries
 	}
 	return es.db.Create(&ex).Error
 }
