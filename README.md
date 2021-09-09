@@ -34,6 +34,10 @@ folder which contains HTML templates.
 
 Setting GIN_MODE to "release" is important for performance when not developing.
 
+### Running in containerized environments
+- The Docker repo is located at j18e/super-aggregator
+- Set the GIN_MODE variable to "release"
+
 ## Roadmap
 - Adapt to run in distributed mode (frontend, ingestor, queryor)
 - Implement cache to reduce database pressure
