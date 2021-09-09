@@ -13,6 +13,10 @@ import (
 	"github.com/j18e/super-aggregator/models"
 )
 
+// createLimit represents the maximum number of entries which can be created in
+// a single request.
+const createLimit = 500
+
 // Entry contains all relevant info of a single log line which has been
 // ingested by the aggregator.
 type Entry struct {
@@ -208,6 +212,10 @@ func (ec *EntryController) CreateHandler() gin.HandlerFunc {
 		var ex []Entry
 		if err := c.ShouldBindJSON(&ex); err != nil {
 			c.String(400, "%s", err)
+			return
+		}
+		if len(ex) > createLimit {
+			c.String(400, "no more than %d entries can be created in one request", createLimit)
 			return
 		}
 		var create []models.Entry
