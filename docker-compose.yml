@@ -8,6 +8,8 @@ services:
     - "-pg.host=postgres"
     - "-pg.user=super-aggregator"
     - "-pg.password=supersecret"
+    environment:
+      GIN_MODE: debug
     volumes:
     - "./views:/views:ro"
     ports: ["9000:9000"]
