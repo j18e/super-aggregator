@@ -59,6 +59,15 @@ Setting GIN_MODE to "release" is important for performance when not developing.
 
 ### Running in containerized environments
 Container images for super-aggregator are hosted on [docker hub](https://hub.docker.com/repository/docker/j18e/super-aggregator).
+```
+docker run \
+    -e GIN_MODE=release \
+    -p 9000:9000 \
+    j18e/super-aggregator:latest \
+    -pg.host=db1.local \
+    -pg.user=super-aggregator \
+    -pg.password=somesecuresecret
+```
 
 ## Continuous integration
 Commits to the main branch trigger builds using Github actions, which if
